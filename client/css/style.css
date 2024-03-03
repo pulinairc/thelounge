@@ -2937,3 +2937,38 @@ part/quit messages where we don't load previews (adds a blank line otherwise) */
 	justify-content: center;
 	align-items: center;
 }
+
+.not-secure-tooltip {
+	display: none !important;
+}
+
+.logo-container {
+        opacity: 0 !important;
+        height: 0 !important;
+        margin-top: -7px !important;
+}
+
+.connect-row.hidden,
+h1.title {
+       display: none !important;
+}      
+
+.connect-row.username {
+    position: absolute;
+    top: -999999px;
+} 
+
+.header {
+  align-items: center !important;
+}
+
+.header button.mentions,
+.header button.menu,
+.header button.rt {
+  margin-top: 0 !important;
+}
+
+#chat table.channel-list .topic,
+.header .topic {
+	white-space: nowrap !important;
+}

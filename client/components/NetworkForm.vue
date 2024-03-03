@@ -221,7 +221,7 @@
 				/>
 			</div>
 			<template v-if="!config?.useHexIp">
-				<div class="connect-row">
+				<div class="connect-row hidden">
 					<label for="connect:username">Username</label>
 					<input
 						id="connect:username"
@@ -233,7 +233,7 @@
 					/>
 				</div>
 			</template>
-			<div class="connect-row">
+			<div class="connect-row hidden">
 				<label for="connect:realname">Real name</label>
 				<input
 					id="connect:realname"
@@ -243,7 +243,7 @@
 					maxlength="300"
 				/>
 			</div>
-			<div class="connect-row">
+			<div class="connect-row hidden">
 				<label for="connect:leaveMessage">Leave message</label>
 				<input
 					id="connect:leaveMessage"
@@ -279,7 +279,7 @@ the server tab on new connection"
 				</div>
 			</template>
 			<template v-else-if="!defaults.uuid">
-				<div class="connect-row">
+				<div class="connect-row hidden">
 					<label for="connect:channels">Channels</label>
 					<input
 						id="connect:channels"
@@ -292,7 +292,7 @@ the server tab on new connection"
 
 			<template v-if="store.state.serverConfiguration?.public">
 				<template v-if="config?.lockNetwork">
-					<div class="connect-row">
+					<div class="connect-row hidden">
 						<label></label>
 						<div class="input-wrap">
 							<label class="tls">
@@ -301,7 +301,7 @@ the server tab on new connection"
 							</label>
 						</div>
 					</div>
-					<div v-if="displayPasswordField" class="connect-row">
+					<div v-if="displayPasswordField" class="connect-row hidden">
 						<label for="connect:password">Password</label>
 						<RevealPassword
 							v-slot:default="slotProps"
