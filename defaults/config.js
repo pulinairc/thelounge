@@ -285,6 +285,28 @@ module.exports = {
 	// This value is set to `false` by default.
 	lockNetwork: false,
 
+	// ### `lockChannels`
+	//
+	// When set to an array of channel names, users will only be able to join
+	// channels in this list. Any attempt to join other channels will be blocked
+	// with an error message.
+	//
+	// When `lockChannelsMessage` is set, it will be shown as the error message
+	// when a user tries to join a channel not in the list.
+	//
+	// This is useful for public instances where you want to restrict users to
+	// specific channels only.
+	//
+	// This value is set to `null` by default to allow joining any channel.
+	//
+	// Example:
+	// ```js
+	// lockChannels: ["#mychannel", "#anotherchannel"],
+	// lockChannelsMessage: "You can only join #mychannel and #anotherchannel.",
+	// ```
+	lockChannels: null,
+	lockChannelsMessage: null,
+
 	// ## User management
 
 	// ### `messageStorage`

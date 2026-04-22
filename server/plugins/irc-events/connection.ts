@@ -57,6 +57,15 @@ export default <IrcEventHandler>function (irc, network) {
 				return;
 			}
 
+			// Skip channels not in the lockChannels allowlist
+			if (Array.isArray(Config.values.lockChannels)) {
+				const allowedChannels = Config.values.lockChannels.map((c) => c.toLowerCase());
+
+				if (!allowedChannels.includes(chan.name.toLowerCase())) {
+					return;
+				}
+			}
+
 			setTimeout(function () {
 				network.irc.join(chan.name, chan.key);
 			}, delay);

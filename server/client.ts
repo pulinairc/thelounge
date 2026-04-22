@@ -534,6 +534,29 @@ class Client {
 			return;
 		}
 
+		// Block joining channels not in the lockChannels allowlist
+		if (cmd === "join" && Array.isArray(Config.values.lockChannels)) {
+			const channelArg = args[0] || "";
+			const allowedChannels = Config.values.lockChannels.map((c) => c.toLowerCase());
+			const requestedChannels = channelArg.split(",");
+			const blocked = requestedChannels.filter(
+				(c) => !allowedChannels.includes(c.toLowerCase())
+			);
+
+			if (blocked.length > 0) {
+				target.chan.pushMessage(
+					this,
+					new Msg({
+						type: MessageType.ERROR,
+						text:
+							Config.values.lockChannelsMessage ||
+							`You are not allowed to join ${blocked.join(", ")}.`,
+					})
+				);
+				return;
+			}
+		}
+
 		// TODO: fix
 		irc!.raw(text);
 	}
