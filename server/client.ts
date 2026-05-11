@@ -361,14 +361,19 @@ class Client {
 		telemetry.logEvent("network_connect", {
 			clientId: client.id,
 			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
 			networkUuid: network.uuid,
 			networkName: network.name,
 			host: network.host,
 			port: network.port,
 			tls: network.tls,
+			rejectUnauthorized: network.rejectUnauthorized,
 			nick: network.nick,
 			username: network.username,
 			realname: network.realname,
+			sasl: network.sasl,
+			saslAccount: network.saslAccount,
+			hasPassword: !!network.password,
 			channels: network.channels
 				.filter((c) => c.type === ChanType.CHANNEL)
 				.map((c) => c.name),

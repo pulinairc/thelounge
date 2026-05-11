@@ -7,6 +7,7 @@ type TelemetryEvent =
 	| "connect"
 	| "disconnect"
 	| "network_connect"
+	| "network_registered"
 	| "network_disconnect"
 	| "channel_join"
 	| "message_sent";

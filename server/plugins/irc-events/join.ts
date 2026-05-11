@@ -42,9 +42,14 @@ export default <IrcEventHandler>function (irc, network) {
 			telemetry.logEvent("channel_join", {
 				clientId: client.id,
 				ip: client.config.browser?.ip,
+				hostname: client.config.browser?.hostname,
 				networkUuid: network.uuid,
 				networkName: network.name,
 				nick: data.nick,
+				ident: data.ident,
+				ircHostname: data.hostname,
+				gecos: data.gecos,
+				account: data.account,
 				channel: data.channel,
 			});
 		}

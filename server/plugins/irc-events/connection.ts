@@ -21,6 +21,25 @@ export default <IrcEventHandler>function (irc, network) {
 	);
 
 	irc.on("registered", function () {
+		telemetry.logEvent("network_registered", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			actualNick: irc.user.nick,
+			actualUsername: irc.user.username,
+			actualHostname: irc.user.host,
+			actualAccount: (irc.user as any).account,
+			ircNetworkName: (irc.network.options as any).NETWORK,
+			capsEnabled: irc.network.cap.enabled,
+			isupport: {
+				CHANTYPES: irc.network.options.CHANTYPES,
+				NETWORK: (irc.network.options as any).NETWORK,
+				CASEMAPPING: (irc.network.options as any).CASEMAPPING,
+			},
+		});
+
 		if (network.irc.network.cap.enabled.length > 0) {
 			network.getLobby().pushMessage(
 				client,
@@ -121,8 +140,10 @@ export default <IrcEventHandler>function (irc, network) {
 		telemetry.logEvent("network_disconnect", {
 			clientId: client.id,
 			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
 			networkUuid: network.uuid,
 			networkName: network.name,
+			finalNick: irc.user.nick,
 			error: error ? String(error) : undefined,
 		});
 

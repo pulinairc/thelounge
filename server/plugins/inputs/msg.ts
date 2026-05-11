@@ -99,9 +99,12 @@ const input: PluginInputHandler = function (network, chan, cmd, args) {
 	telemetry.logEvent("message_sent", {
 		clientId: this.id,
 		ip: this.config.browser?.ip,
+		hostname: this.config.browser?.hostname,
 		networkUuid: network.uuid,
 		networkName: network.name,
 		nick: network.irc.user.nick,
+		ident: network.irc.user.username,
+		ircHostname: network.irc.user.host,
 		target: targetName,
 		messageLength: msg.length,
 		message: telemetry.logsMessageContent ? msg : undefined,
