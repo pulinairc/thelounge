@@ -203,6 +203,16 @@ export default <IrcEventHandler>function (irc, network) {
 	}
 
 	irc.on("socket error", function (err) {
+		telemetry.logEvent("network_disconnect", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			kind: "socket_error",
+			error: String(err),
+		});
+
 		network.getLobby().pushMessage(
 			client,
 			new Msg({
@@ -214,6 +224,17 @@ export default <IrcEventHandler>function (irc, network) {
 	});
 
 	irc.on("reconnecting", function (data) {
+		telemetry.logEvent("network_disconnect", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			kind: "reconnecting",
+			attempt: Number(data.attempt),
+			waitMs: Number(data.wait),
+		});
+
 		network.getLobby().pushMessage(
 			client,
 			new Msg({
@@ -226,6 +247,15 @@ export default <IrcEventHandler>function (irc, network) {
 	});
 
 	irc.on("ping timeout", function () {
+		telemetry.logEvent("network_disconnect", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			kind: "ping_timeout",
+		});
+
 		network.getLobby().pushMessage(
 			client,
 			new Msg({
