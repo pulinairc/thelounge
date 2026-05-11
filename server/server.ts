@@ -9,6 +9,7 @@ import colors from "chalk";
 import net from "net";
 
 import log from "./log";
+import telemetry from "./telemetry";
 import Client from "./client";
 import ClientManager from "./clientManager";
 import Uploader from "./plugins/uploader";
@@ -75,6 +76,8 @@ export default async function (
 		process.arch
 	})`);
 	log.info(`Configuration file: ${colors.green(Config.getConfigPath())}`);
+
+	telemetry.init();
 
 	const staticOptions = {
 		redirect: false,
@@ -992,7 +995,25 @@ function performAuthentication(this: Socket, data: AuthPerformData) {
 		manager!.clients.push(client);
 
 		const cb_client = client; // ensure TS can see we never have a nil client
+
+		const connectedAt = Date.now();
+		telemetry.logEvent("connect", {
+			socketId: socket.id,
+			clientId: cb_client.id,
+			ip: getClientIp(socket),
+			userAgent: socket.handshake.headers["user-agent"],
+			language: getClientLanguage(socket),
+			secure: getClientSecure(socket),
+		});
+
 		socket.on("disconnect", function () {
+			telemetry.logEvent("disconnect", {
+				socketId: socket.id,
+				clientId: cb_client.id,
+				durationMs: Date.now() - connectedAt,
+				networkCount: cb_client.networks.length,
+			});
+
 			manager!.clients = _.without(manager!.clients, cb_client);
 			cb_client.quit();
 		});

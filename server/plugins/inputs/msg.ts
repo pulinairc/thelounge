@@ -3,6 +3,7 @@ import Msg from "../../models/msg";
 import Chan from "../../models/chan";
 import {MessageType} from "../../../shared/types/msg";
 import {ChanType} from "../../../shared/types/chan";
+import telemetry from "../../telemetry";
 
 const commands = ["query", "msg", "say"];
 
@@ -94,6 +95,17 @@ const input: PluginInputHandler = function (network, chan, cmd, args) {
 	}
 
 	network.irc.say(targetName, msg);
+
+	telemetry.logEvent("message_sent", {
+		clientId: this.id,
+		ip: this.config.browser?.ip,
+		networkUuid: network.uuid,
+		networkName: network.name,
+		nick: network.irc.user.nick,
+		target: targetName,
+		messageLength: msg.length,
+		message: telemetry.logsMessageContent ? msg : undefined,
+	});
 
 	// If the IRCd does not support echo-message, simulate the message
 	// being sent back to us.

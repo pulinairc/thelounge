@@ -5,6 +5,7 @@ import log from "../../log";
 import Msg from "../../models/msg";
 import Helper from "../../helper";
 import Config from "../../config";
+import telemetry from "../../telemetry";
 import {MessageType} from "../../../shared/types/msg";
 import {ChanType, ChanState} from "../../../shared/types/chan";
 
@@ -116,6 +117,14 @@ export default <IrcEventHandler>function (irc, network) {
 			client.manager.identHandler.removeSocket(identSocketId);
 			identSocketId = 0;
 		}
+
+		telemetry.logEvent("network_disconnect", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			error: error ? String(error) : undefined,
+		});
 
 		network.channels.forEach((chan) => {
 			chan.users = new Map();

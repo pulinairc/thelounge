@@ -6,6 +6,7 @@ import crypto from "crypto";
 import colors from "chalk";
 
 import log from "./log";
+import telemetry from "./telemetry";
 import Chan, {ChanConfig} from "./models/chan";
 import Msg from "./models/msg";
 import Config from "./config";
@@ -356,6 +357,22 @@ class Client {
 		}
 
 		(network as NetworkWithIrcFramework).createIrcFramework(client);
+
+		telemetry.logEvent("network_connect", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			host: network.host,
+			port: network.port,
+			tls: network.tls,
+			nick: network.nick,
+			username: network.username,
+			realname: network.realname,
+			channels: network.channels
+				.filter((c) => c.type === ChanType.CHANNEL)
+				.map((c) => c.name),
+		});
 
 		// TODO
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises

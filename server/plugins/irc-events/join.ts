@@ -3,6 +3,7 @@ import User from "../../models/user";
 import type {IrcEventHandler} from "../../client";
 import {MessageType} from "../../../shared/types/msg";
 import {ChanState} from "../../../shared/types/chan";
+import telemetry from "../../telemetry";
 
 export default <IrcEventHandler>function (irc, network) {
 	const client = this;
@@ -34,6 +35,17 @@ export default <IrcEventHandler>function (irc, network) {
 			client.emit("channel:state", {
 				chan: chan.id,
 				state: chan.state,
+			});
+		}
+
+		if (data.nick === irc.user.nick) {
+			telemetry.logEvent("channel_join", {
+				clientId: client.id,
+				ip: client.config.browser?.ip,
+				networkUuid: network.uuid,
+				networkName: network.name,
+				nick: data.nick,
+				channel: data.channel,
 			});
 		}
 
