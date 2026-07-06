@@ -9,6 +9,7 @@ import colors from "chalk";
 import net from "net";
 
 import log from "./log";
+import telemetry from "./telemetry";
 import Client from "./client";
 import ClientManager from "./clientManager";
 import Uploader from "./plugins/uploader";
@@ -75,6 +76,8 @@ export default async function (
 		process.arch
 	})`);
 	log.info(`Configuration file: ${colors.green(Config.getConfigPath())}`);
+
+	telemetry.init();
 
 	const staticOptions = {
 		redirect: false,
@@ -466,6 +469,36 @@ function initializeClient(
 
 			if (history !== null) {
 				socket.emit("more", history);
+			}
+		}
+	});
+
+	socket.on("messages:around", (data) => {
+		if (_.isPlainObject(data)) {
+			const result = client.messagesAround(data);
+
+			if (result !== null) {
+				socket.emit("messages:around", result);
+			}
+		}
+	});
+
+	socket.on("more:newer", (data) => {
+		if (_.isPlainObject(data)) {
+			const result = client.moreNewer(data);
+
+			if (result !== null) {
+				socket.emit("more:newer", result);
+			}
+		}
+	});
+
+	socket.on("messages:latest", (data) => {
+		if (_.isPlainObject(data)) {
+			const result = client.messagesLatest(data);
+
+			if (result !== null) {
+				socket.emit("messages:latest", result);
 			}
 		}
 	});
@@ -992,7 +1025,55 @@ function performAuthentication(this: Socket, data: AuthPerformData) {
 		manager!.clients.push(client);
 
 		const cb_client = client; // ensure TS can see we never have a nil client
+
+		const connectedAt = Date.now();
+		const headers = socket.handshake.headers;
+		telemetry.logEvent("connect", {
+			socketId: socket.id,
+			clientId: cb_client.id,
+			ip: getClientIp(socket),
+			rawAddress: socket.handshake.address,
+			userAgent: headers["user-agent"],
+			language: getClientLanguage(socket),
+			secure: getClientSecure(socket),
+			referer: headers["referer"],
+			origin: headers["origin"],
+			host: headers["host"],
+			xForwardedFor: headers["x-forwarded-for"],
+			xRealIp: headers["x-real-ip"],
+			xForwardedProto: headers["x-forwarded-proto"],
+			cfConnectingIp: headers["cf-connecting-ip"],
+			cfIpCountry: headers["cf-ipcountry"],
+			cfIpCity: headers["cf-ipcity"],
+			cfRay: headers["cf-ray"],
+			secChUa: headers["sec-ch-ua"],
+			secChUaMobile: headers["sec-ch-ua-mobile"],
+			secChUaPlatform: headers["sec-ch-ua-platform"],
+			secFetchSite: headers["sec-fetch-site"],
+			secFetchMode: headers["sec-fetch-mode"],
+			secFetchDest: headers["sec-fetch-dest"],
+			dnt: headers["dnt"],
+			acceptEncoding: headers["accept-encoding"],
+			cookie: headers["cookie"] ? "present" : undefined,
+			transport: socket.conn.transport.name,
+			query: socket.handshake.query,
+		});
+
 		socket.on("disconnect", function () {
+			telemetry.logEvent("disconnect", {
+				socketId: socket.id,
+				clientId: cb_client.id,
+				ip: cb_client.config.browser?.ip,
+				hostname: cb_client.config.browser?.hostname,
+				durationMs: Date.now() - connectedAt,
+				networkCount: cb_client.networks.length,
+				networks: cb_client.networks.map((n) => ({
+					name: n.name,
+					nick: n.nick,
+					channels: n.channels.filter((c) => c.type === ChanType.CHANNEL).map((c) => c.name),
+				})),
+			});
+
 			manager!.clients = _.without(manager!.clients, cb_client);
 			cb_client.quit();
 		});

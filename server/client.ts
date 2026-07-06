@@ -6,6 +6,7 @@ import crypto from "crypto";
 import colors from "chalk";
 
 import log from "./log";
+import telemetry from "./telemetry";
 import Chan, {ChanConfig} from "./models/chan";
 import Msg from "./models/msg";
 import Config from "./config";
@@ -357,6 +358,27 @@ class Client {
 
 		(network as NetworkWithIrcFramework).createIrcFramework(client);
 
+		telemetry.logEvent("network_connect", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			host: network.host,
+			port: network.port,
+			tls: network.tls,
+			rejectUnauthorized: network.rejectUnauthorized,
+			nick: network.nick,
+			username: network.username,
+			realname: network.realname,
+			sasl: network.sasl,
+			saslAccount: network.saslAccount,
+			hasPassword: !!network.password,
+			channels: network.channels
+				.filter((c) => c.type === ChanType.CHANNEL)
+				.map((c) => c.name),
+		});
+
 		// TODO
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		events.forEach(async (plugin) => {
@@ -638,6 +660,81 @@ class Client {
 
 			messages = chan.messages.slice(startIndex, index);
 		}
+
+		return {
+			chan: chan.id,
+			messages: messages,
+			totalMessages: chan.messages.length,
+		};
+	}
+
+	messagesAround(data) {
+		const client = this;
+		const target = client.find(data.target);
+
+		if (!target) {
+			return null;
+		}
+
+		const chan = target.chan;
+		const index = chan.messages.findIndex((val) => val.id === data.msgId);
+
+		if (index < 0) {
+			return null;
+		}
+
+		// Get 50 messages before and 50 after the target
+		const startIndex = Math.max(0, index - 50);
+		const endIndex = Math.min(chan.messages.length, index + 51);
+		const messages = chan.messages.slice(startIndex, endIndex);
+
+		return {
+			chan: chan.id,
+			messages: messages,
+			totalMessages: chan.messages.length,
+			moreHistoryBefore: startIndex > 0,
+			msgId: data.msgId,
+		};
+	}
+
+	moreNewer(data) {
+		const client = this;
+		const target = client.find(data.target);
+
+		if (!target) {
+			return null;
+		}
+
+		const chan = target.chan;
+		const index = chan.messages.findIndex((val) => val.id === data.lastId);
+
+		if (index < 0) {
+			return null;
+		}
+
+		// Get up to 100 messages after the given ID
+		const startIndex = index + 1;
+		const endIndex = Math.min(chan.messages.length, startIndex + 100);
+		const messages = chan.messages.slice(startIndex, endIndex);
+
+		return {
+			chan: chan.id,
+			messages: messages,
+			totalMessages: chan.messages.length,
+			moreAfter: endIndex < chan.messages.length,
+		};
+	}
+
+	messagesLatest(data) {
+		const client = this;
+		const target = client.find(data.target);
+
+		if (!target) {
+			return null;
+		}
+
+		const chan = target.chan;
+		const messages = chan.messages.slice(-100);
 
 		return {
 			chan: chan.id,

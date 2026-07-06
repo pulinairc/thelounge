@@ -105,6 +105,11 @@ export type ConfigType = {
 	lockNetwork: boolean;
 	lockChannels: string[] | null;
 	lockChannelsMessage: string | null;
+	telemetry: {
+		enabled: boolean;
+		logMessageContent: boolean;
+		path: string;
+	};
 	messageStorage: string[];
 	storagePolicy: StoragePolicy;
 	useHexIp: boolean;

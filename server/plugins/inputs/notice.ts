@@ -1,4 +1,5 @@
 import {PluginInputHandler} from "./index";
+import telemetry from "../../telemetry";
 
 const commands = ["notice"];
 
@@ -9,6 +10,21 @@ const input: PluginInputHandler = function (network, chan, cmd, args) {
 
 	let targetName = args[0];
 	let message = args.slice(1).join(" ");
+
+	telemetry.logEvent("message_sent", {
+		clientId: this.id,
+		ip: this.config.browser?.ip,
+		hostname: this.config.browser?.hostname,
+		networkUuid: network.uuid,
+		networkName: network.name,
+		kind: "notice",
+		nick: network.irc.user.nick,
+		ident: network.irc.user.username,
+		ircHostname: network.irc.user.host,
+		target: targetName,
+		messageLength: message.length,
+		message: telemetry.logsMessageContent ? message : undefined,
+	});
 
 	network.irc.notice(targetName, message);
 

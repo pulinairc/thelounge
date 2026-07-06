@@ -5,6 +5,7 @@ import log from "../../log";
 import Msg from "../../models/msg";
 import Helper from "../../helper";
 import Config from "../../config";
+import telemetry from "../../telemetry";
 import {MessageType} from "../../../shared/types/msg";
 import {ChanType, ChanState} from "../../../shared/types/chan";
 
@@ -20,6 +21,25 @@ export default <IrcEventHandler>function (irc, network) {
 	);
 
 	irc.on("registered", function () {
+		telemetry.logEvent("network_registered", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			actualNick: irc.user.nick,
+			actualUsername: irc.user.username,
+			actualHostname: irc.user.host,
+			actualAccount: (irc.user as any).account,
+			ircNetworkName: (irc.network.options as any).NETWORK,
+			capsEnabled: irc.network.cap.enabled,
+			isupport: {
+				CHANTYPES: irc.network.options.CHANTYPES,
+				NETWORK: (irc.network.options as any).NETWORK,
+				CASEMAPPING: (irc.network.options as any).CASEMAPPING,
+			},
+		});
+
 		if (network.irc.network.cap.enabled.length > 0) {
 			network.getLobby().pushMessage(
 				client,
@@ -117,6 +137,16 @@ export default <IrcEventHandler>function (irc, network) {
 			identSocketId = 0;
 		}
 
+		telemetry.logEvent("network_disconnect", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			finalNick: irc.user.nick,
+			error: error ? String(error) : undefined,
+		});
+
 		network.channels.forEach((chan) => {
 			chan.users = new Map();
 			chan.state = ChanState.PARTED;
@@ -173,6 +203,16 @@ export default <IrcEventHandler>function (irc, network) {
 	}
 
 	irc.on("socket error", function (err) {
+		telemetry.logEvent("network_disconnect", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			kind: "socket_error",
+			error: String(err),
+		});
+
 		network.getLobby().pushMessage(
 			client,
 			new Msg({
@@ -184,6 +224,17 @@ export default <IrcEventHandler>function (irc, network) {
 	});
 
 	irc.on("reconnecting", function (data) {
+		telemetry.logEvent("network_disconnect", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			kind: "reconnecting",
+			attempt: Number(data.attempt),
+			waitMs: Number(data.wait),
+		});
+
 		network.getLobby().pushMessage(
 			client,
 			new Msg({
@@ -196,6 +247,15 @@ export default <IrcEventHandler>function (irc, network) {
 	});
 
 	irc.on("ping timeout", function () {
+		telemetry.logEvent("network_disconnect", {
+			clientId: client.id,
+			ip: client.config.browser?.ip,
+			hostname: client.config.browser?.hostname,
+			networkUuid: network.uuid,
+			networkName: network.name,
+			kind: "ping_timeout",
+		});
+
 		network.getLobby().pushMessage(
 			client,
 			new Msg({

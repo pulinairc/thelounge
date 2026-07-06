@@ -307,6 +307,33 @@ module.exports = {
 	lockChannels: null,
 	lockChannelsMessage: null,
 
+	// ### `telemetry`
+	//
+	// Append-only JSON Lines log of webchat (public mode) visitor activity:
+	// connect/disconnect, network connect/disconnect, channel joins, messages
+	// sent (length only by default; set `logMessageContent: true` to also log
+	// message text). Useful for diagnosing abuse or unusual activity on a
+	// public instance.
+	//
+	// `path` is relative to the The Lounge data directory. If omitted, defaults
+	// to `telemetry.log` in the data directory.
+	//
+	// Disabled by default.
+	//
+	// Example:
+	// ```js
+	// telemetry: {
+	//     enabled: true,
+	//     logMessageContent: false,
+	//     path: "telemetry.log",
+	// },
+	// ```
+	telemetry: {
+		enabled: false,
+		logMessageContent: false,
+		path: "telemetry.log",
+	},
+
 	// ## User management
 
 	// ### `messageStorage`

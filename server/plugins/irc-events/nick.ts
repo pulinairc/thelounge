@@ -2,6 +2,7 @@ import {IrcEventHandler} from "../../client";
 
 import Msg from "../../models/msg";
 import {MessageType} from "../../../shared/types/msg";
+import telemetry from "../../telemetry";
 
 export default <IrcEventHandler>function (irc, network) {
 	const client = this;
@@ -10,6 +11,17 @@ export default <IrcEventHandler>function (irc, network) {
 		const self = data.nick === irc.user.nick;
 
 		if (self) {
+			telemetry.logEvent("network_registered", {
+				clientId: client.id,
+				ip: client.config.browser?.ip,
+				hostname: client.config.browser?.hostname,
+				networkUuid: network.uuid,
+				networkName: network.name,
+				kind: "nick_change",
+				oldNick: data.nick,
+				newNick: data.new_nick,
+			});
+
 			network.setNick(data.new_nick);
 
 			const lobby = network.getLobby();

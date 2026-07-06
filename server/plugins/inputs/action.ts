@@ -2,6 +2,7 @@ import {PluginInputHandler} from "./index";
 import Msg from "../../models/msg";
 import {MessageType} from "../../../shared/types/msg";
 import {ChanType} from "../../../shared/types/chan";
+import telemetry from "../../telemetry";
 
 const commands = ["slap", "me"];
 
@@ -30,6 +31,21 @@ const input: PluginInputHandler = function ({irc}, chan, cmd, args) {
 			}
 
 			text = text || args.join(" ");
+
+			telemetry.logEvent("message_sent", {
+				clientId: this.id,
+				ip: this.config.browser?.ip,
+				hostname: this.config.browser?.hostname,
+				networkUuid: chan.id ? undefined : undefined,
+				kind: "action",
+				command: cmd,
+				nick: irc.user.nick,
+				ident: irc.user.username,
+				ircHostname: irc.user.host,
+				target: chan.name,
+				messageLength: text.length,
+				message: telemetry.logsMessageContent ? text : undefined,
+			});
 
 			irc.action(chan.name, text);
 

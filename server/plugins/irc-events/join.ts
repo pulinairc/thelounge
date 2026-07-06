@@ -3,6 +3,8 @@ import User from "../../models/user";
 import type {IrcEventHandler} from "../../client";
 import {MessageType} from "../../../shared/types/msg";
 import {ChanState} from "../../../shared/types/chan";
+import {decodeSmartEncoding} from "./encoding";
+import telemetry from "../../telemetry";
 
 export default <IrcEventHandler>function (irc, network) {
 	const client = this;
@@ -37,12 +39,29 @@ export default <IrcEventHandler>function (irc, network) {
 			});
 		}
 
+		if (data.nick === irc.user.nick) {
+			telemetry.logEvent("channel_join", {
+				clientId: client.id,
+				ip: client.config.browser?.ip,
+				hostname: client.config.browser?.hostname,
+				networkUuid: network.uuid,
+				networkName: network.name,
+				nick: data.nick,
+				ident: data.ident,
+				ircHostname: data.hostname,
+				gecos: data.gecos,
+				account: data.account,
+				channel: data.channel,
+			});
+		}
+
 		const user = new User({nick: data.nick});
+		// Apply smart encoding detection for ISO-8859-1/15 compatibility
 		const msg = new Msg({
 			time: data.time,
 			from: user,
 			hostmask: data.ident + "@" + data.hostname,
-			gecos: data.gecos,
+			gecos: decodeSmartEncoding(data.gecos),
 			account: data.account,
 			type: MessageType.JOIN,
 			self: data.nick === irc.user.nick,
