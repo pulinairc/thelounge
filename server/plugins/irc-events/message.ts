@@ -1,7 +1,6 @@
 import Msg from "../../models/msg";
 import LinkPrefetch from "./link";
 import {cleanIrcMessage} from "../../../shared/irc";
-import Helper from "../../helper";
 import {IrcEventHandler} from "../../client";
 import Chan from "../../models/chan";
 import User from "../../models/user";
@@ -23,10 +22,11 @@ type HandleInput = {
 	from_server?: boolean;
 	message: string;
 	group?: string;
+	msgid?: string;
 };
 
 function convertForHandle(type: MessageType, data: MessageEventArgs): HandleInput {
-	return {...data, type: type};
+	return {...data, type: type, msgid: data.tags?.msgid};
 }
 
 export default <IrcEventHandler>function (irc, network) {
@@ -68,11 +68,7 @@ export default <IrcEventHandler>function (irc, network) {
 		}
 
 		// Check if the sender is in our ignore list
-		const shouldIgnore =
-			!self &&
-			network.ignoreList.some(function (entry) {
-				return Helper.compareHostmask(entry, data);
-			});
+		const shouldIgnore = !self && network.isIgnoredUser(data);
 
 		// Server messages that aren't targeted at a channel go to the server window
 		if (
@@ -138,6 +134,7 @@ export default <IrcEventHandler>function (irc, network) {
 			from: from,
 			highlight: highlight,
 			users: [],
+			msgid: data.msgid,
 		});
 
 		if (showInActive) {

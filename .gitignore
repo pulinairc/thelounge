@@ -8,3 +8,5 @@ coverage/
 dist/
 public
 !public/themes/*
+test/public/
+client/public/fonts/*.woff*

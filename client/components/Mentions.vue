@@ -167,7 +167,13 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import {computed, watch, defineComponent, ref, onMounted, onUnmounted, nextTick} from "vue";
 import {useStore} from "../js/store";
 import {switchToChannel} from "../js/router";
-import {ClientMention} from "../js/types";
+import type {SharedMention} from "../../shared/types/mention";
+import type {NetChan} from "../js/types";
+
+type MentionWithContext = SharedMention & {
+	localetime: string;
+	channel: NetChan | null;
+};
 
 dayjs.extend(relativeTime);
 
@@ -182,14 +188,15 @@ export default defineComponent({
 		const isOpen = ref(false);
 		const isLoading = ref(false);
 		const resolvedMessages = computed(() => {
-			const messages = store.state.mentions.slice().reverse();
-
-			for (const message of messages) {
-				message.localetime = localetime(message.time);
-				message.channel = store.getters.findChannel(message.chanId);
-			}
-
-			return messages.filter((message) => !message.channel?.channel.muted);
+			return store.state.mentions
+				.slice()
+				.reverse()
+				.map((message) => ({
+					...message,
+					localetime: localetime(message.time),
+					channel: store.getters.findChannel(message.chanId),
+				}))
+				.filter((message) => !message.channel?.channel.muted);
 		});
 
 		watch(
@@ -203,7 +210,7 @@ export default defineComponent({
 			return dayjs(time).fromNow();
 		};
 
-		const dismissMention = (message: ClientMention) => {
+		const dismissMention = (message: MentionWithContext) => {
 			store.state.mentions.splice(
 				store.state.mentions.findIndex((m) => m.msgId === message.msgId),
 				1
@@ -225,7 +232,7 @@ export default defineComponent({
 			}
 		};
 
-		const goToMention = (message: ClientMention) => {
+		const goToMention = (message: MentionWithContext) => {
 			if (!message.channel) {
 				return;
 			}
